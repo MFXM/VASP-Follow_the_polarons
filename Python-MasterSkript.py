@@ -17,18 +17,17 @@ def POS(file_no,position):
 file_no = -1
 position = []
 
-os.system("awk '/POSITION/ {for(i=1; i<=288; i++) {getline; print $1,$2,$3}}' OUTCAR > all_pos.dat")
+os.system("awk '/POSITION/ {for(i=1; i<=289; i++) {getline; print $1,$2,$3}}' OUTCAR > all_pos.dat")
 
-with open('all_pos.dat','r') as pos:
+with open('all_pos.dat') as pos:
+    print('.')
     for line in pos:
         line = line.rstrip('\n')
-        if line == '-----------------------------------------------------------------------------------':
+        if line == '-----------------------------------------------------------------------------------  ':
             if file_no != -1:
                 POS(file_no,position)                 
             position = []
             file_no += 1
-        elif line == '  ':
-            pass
         else:
             position.append(line)
 
@@ -39,4 +38,5 @@ for N in range(file_no):
         with open("neighdist.dat") as dis:
             distances = [next(dis) for x in range(9)]
             with open(f"Distances_POS{N}_ATOM{atom}.dat","w")as dat:
-                dat.write(distances)
+                for i in range(len(distances)):
+                    dat.write(distances[i])
