@@ -17,9 +17,9 @@ def POS(file_no,position):
 file_no = -1
 position = []
 
-#os.sytem("awk '/POSITION/ {for(i=1; i<=288;i++) {getline; print $1,$2,$3}}' OUTCAR > all_pos.dat")
+os.system("awk '/POSITION/ {for(i=1; i<=288; i++) {getline; print $1,$2,$3}}' OUTCAR > all_pos.dat")
 
-with open('all_pos.dat') as pos:
+with open('all_pos.dat','r') as pos:
     for line in pos:
         line = line.rstrip('\n')
         if line == '-----------------------------------------------------------------------------------':
@@ -35,7 +35,7 @@ with open('all_pos.dat') as pos:
 for N in range(file_no):
     for atom in range(1, 97): #just the Ti Atoms
         os.system("chmod +x neighbors.pl")
-        os.sytem(f"./neighbors.pl POSCAR_{N} {atom}")
+        os.system(f"./neighbors.pl POSCAR_{N} {atom}")
         with open("neighdist.dat") as dis:
             distances = [next(dis) for x in range(9)]
             with open(f"Distances_POS{N}_ATOM{atom}.dat","w")as dat:
