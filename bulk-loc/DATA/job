@@ -1,7 +1,0 @@
-#$ -N tio2-loc
-#$ -pe ort* 16
-#$ -q fugu.q
-
-np=16
-
-mpirun -np $np /fs/home/michele/vasp/vasp.5.4.3_gmpi/vasp
