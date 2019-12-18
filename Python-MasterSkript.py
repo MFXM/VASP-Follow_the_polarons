@@ -1,5 +1,4 @@
 import os
-import numpy as np
 
 def POS(file_no,position):
     with open(f"POSCAR/POSCAR_{file_no}","w") as pos:
@@ -42,10 +41,8 @@ with open('all_pos.dat') as pos:
             
 POS(file_no + 1, position)
 
-file_no = 1
-
 os.system("awk 'BEGIN{t=0; m=99999999} $1 ~ /magnetization/ && $2 ~ /x/ {m=NR; t=t+1} {if(NR > m+3 && NR < m+292) print $5 } {if(NR == m+292) print \"-----\" }' OUTCAR > MAGNETIZATION/all_mag.dat")       
-#os.system("awk 'BEGIN{t=0; m=99999999} $1 ~ /magnetization/ && $2 ~ /x/ {m=NR; t=t+1} {if(NR > m+3 && NR < m+292) print $5 > \"MAGNETIZATION/MAGNETIZATION_\"t } ' OUTCAR")
+#os.system("awk 'BEGIN{t=0; m=99999999} $1 ~ /magnetization/ && $2 ~ /x/ {m=NR; t=t+1; print > \"MAGNETIZATION/MAGNETIZATION_\"t} {if(NR > m+3 && NR < m+292) print $5 > \"MAGNETIZATION/MAGNETIZATION_\"t } ' OUTCAR")
 
 with open('MAGNETIZATION/all_mag.dat') as mag:
     for line in mag:
@@ -56,11 +53,25 @@ with open('MAGNETIZATION/all_mag.dat') as mag:
             file_no2 += 1
         else:
             magnet.append(line)
+            
+for atom in range(1,97):     
+    label = ''
+    with open(f"DATA_control/Ti_{atom}_control.dat","w+") as data:
+        for i in range(1,9): 
+            label = label + 'POSITION '
+        label = label + 'Magnetization '
+        for i in range(1,9): 
+            label = label + 'ATOM '
+        label = label + 'Time (fs) \n\n'
+        
+        data.write(label)
 
 for N in range(file_no):
+    print(f"Evaluating data at t = {N}fs ...")
+    
     with open(f"MAGNETIZATION/MAGNETIZATION_{N}") as mag:
         magnetization = [next(mag) for x in range(288)]
-    for atom in range(1, 2): #just the 96 Ti Atoms
+    for atom in range(1, 97): #just the 96 Ti Atoms
         os.system("chmod +x neighbors.pl")
         os.system(f"./neighbors.pl POSCAR/POSCAR_{N} {atom}")
         with open("neighdist.dat") as dis:
@@ -81,17 +92,15 @@ for N in range(file_no):
         with open(f"DATA/Ti_{atom}.dat","a+") as data:
             for i in range(1,9): 
                 datafile = datafile + real_distance[i].strip('\n') + ' '
-            datafile = datafile + magnetization[i].strip('\n') + ''
-            datafile = datafile + str(N)
+            datafile = datafile + magnetization[atom-1].strip('\n') + '\n'
             
             data.write(datafile)
         
         with open(f"DATA_control/Ti_{atom}_control.dat","a+") as data:
+            datafile = datafile.strip('\n')
             for i in range(1,9): 
                 datafile = datafile + real_atom[i].strip('\n') + ' '
-            datafile = datafile + magnetization[i].strip('\n') + ' '
-            datafile = datafile + str(N)
+            datafile = datafile + str(N) + '\n'
             
             data.write(datafile)
-        
         
