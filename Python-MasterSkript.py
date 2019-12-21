@@ -25,6 +25,7 @@ file_no2 = 0
 position = []
 magnet = []
 
+print("Preparing data ...")
 
 os.system("awk '/POSITION/ {for(i=1; i<=289; i++) {getline; print $1,$2,$3}}' OUTCAR > all_pos.dat")
 
@@ -67,7 +68,8 @@ for atom in range(1,97):
         data.write(label)
 
 for N in range(file_no):
-    print(f"Evaluating data at t = {N}fs ...")
+    if N%100 == 0:
+        print(f"Evaluating data at t = {N}fs ...")
     
     with open(f"MAGNETIZATION/MAGNETIZATION_{N}") as mag:
         magnetization = [next(mag) for x in range(288)]
