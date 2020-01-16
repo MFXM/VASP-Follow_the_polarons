@@ -1,0 +1,11 @@
+No-Polerons:
+
+DATA_2: 91,81,71
+DATA_3: 91
+
++ random delete to 12800 entries
+
+Polerons:
+
+DATA_2: 26,37,38,39,41,42
+DATA_3: 01,12,21,26,28,40,41,46,47,49,58,70,71
