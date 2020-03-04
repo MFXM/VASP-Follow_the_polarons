@@ -15,7 +15,7 @@ else:
     device = torch.device("cpu")
     print("Running on the CPU.")
     
-TRAINING_ON_NEAR_POLARONS = False
+TRAINING_ON_NEAR_POLARONS = True
     
 DATADIR = "Machine_Learning"
 TRAINDIR = "TRAINING_DATA"
@@ -25,11 +25,11 @@ TESTDIR = "TESTING_DATA"
     
 TRAINSIZE = 9100
 TESTSIZE = 1860
-NEIGHBOURS = 8
+NEIGHBOURS = 2
 MAX_DISTANCE = 3.5
 
 REBUILD_DATA = True
-BATCH_SIZE = 10
+BATCH_SIZE = 100
 EPOCH = 1
 EPOCHS = 101
 if TRAINING_ON_NEAR_POLARONS:
@@ -61,6 +61,9 @@ train_accuracies = []
 accuracies = []
 timestamp = []
 
+
+
+
 confusion_matrix = torch.zeros(OUTPUTSIZE,OUTPUTSIZE)
 
 def create_training_data():
@@ -71,7 +74,18 @@ def create_training_data():
         with open(path, "r") as dataset:
             for line in dataset:
                 new_array = [float(distance.strip()) for distance in line.split()]
-                training_data.append([np.array(new_array), np.eye(OUTPUTSIZE)[class_num]])
+                oxygen_1array = new_array[0:4]
+                oxygen_2array = new_array[4:6]
+                titanium_array = new_array[6:]
+                if NEIGHBOURS == 2:
+                    training_array = oxygen_1array[0:2]
+                elif NEIGHBOURS == 4:
+                    training_array = oxygen_1array
+                elif NEIGHBOURS == 6:
+                    training_array = oxygen_1array + oxygen_2array
+                elif NEIGHBOURS == 8:
+                    training_array = oxygen_1array + oxygen_2array + titanium_array
+                training_data.append([np.array(training_array), np.eye(OUTPUTSIZE)[class_num]])
     
     np.random.shuffle(training_data)
     np.save("training_data.npy", training_data)
@@ -84,7 +98,18 @@ def create_testing_data():
         with open(path, "r") as dataset:
             for line in dataset:
                 new_array = [float(distance.strip()) for distance in line.split()]
-                testing_data.append([np.array(new_array), np.eye(OUTPUTSIZE)[class_num]])
+                oxygen_1array = new_array[0:4]
+                oxygen_2array = new_array[4:6]
+                titanium_array = new_array[6:]
+                if NEIGHBOURS == 2:
+                    testing_array = oxygen_1array[0:2]
+                elif NEIGHBOURS == 4:
+                    testing_array = oxygen_1array
+                elif NEIGHBOURS == 6:
+                    testing_array = oxygen_1array + oxygen_2array
+                elif NEIGHBOURS == 8:
+                    testing_array = oxygen_1array + oxygen_2array + titanium_array
+                testing_data.append([np.array(testing_array), np.eye(OUTPUTSIZE)[class_num]])
     
     np.random.shuffle(testing_data)
     np.save("testing_data.npy", testing_data)
@@ -120,14 +145,14 @@ class Net(nn.Module): #fully connected layers
         x = F.relu(self.fc3(x))
         x = self.fc4(x)
         return F.log_softmax(x, dim=1)
-   
+
 net = Net().to(device)
 
-train_X = torch.Tensor([i[0] for i in training_data]).view(-1,8)
+train_X = torch.Tensor([i[0] for i in training_data]).view(-1,NEIGHBOURS)
 train_X = train_X/MAX_DISTANCE
 train_Y = torch.Tensor([i[1] for i in training_data])
 
-test_X = torch.Tensor([i[0] for i in testing_data]).view(-1,8)
+test_X = torch.Tensor([i[0] for i in testing_data]).view(-1,NEIGHBOURS)
 test_X = test_X/MAX_DISTANCE
 test_Y = torch.Tensor([i[1] for i in testing_data])
 
@@ -139,7 +164,7 @@ def train(net):
     for epoch in range(EPOCH):
         #for i in tqdm(range(0, len(train_X), BATCH_SIZE)):
         for i in range(0, len(train_X), BATCH_SIZE):
-            batch_X = train_X[i:i+BATCH_SIZE].view(-1,8)
+            batch_X = train_X[i:i+BATCH_SIZE].view(-1,NEIGHBOURS)
             batch_Y = train_Y[i:i+BATCH_SIZE]
             
             batch_X, batch_Y = batch_X.to(device), batch_Y.to(device)
@@ -166,7 +191,7 @@ def test(net, time):
         #for i in tqdm(range(len(test_X))):
         for i in range(len(test_X)):
             real_class = torch.argmax(test_Y[i]).to(device)
-            net_out = net(test_X[i].view(-1,8).to(device))[0]
+            net_out = net(test_X[i].view(-1,NEIGHBOURS).to(device))[0]
             predicted_class = torch.argmax(net_out)
             
             if predicted_class == real_class:
@@ -230,5 +255,5 @@ with open(path,"w") as log:
         logging = str(timestamp[i]) + "    " + str(train_accuracies[i]) + "    " + str(accuracies[i]) + "\n"
         log.write(logging)
 
-    
+
     
